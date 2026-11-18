@@ -1,0 +1,44 @@
+# 本機驗證用：MySQL 8.4（與 AIBorn 相同版本）+ 用正式 Dockerfile 建出來的 app
+#
+#   docker compose up -d --build                      # 網站 → http://localhost:8080
+#   docker compose run --rm --entrypoint /bin/sh app -c "node src/scripts/heartbeat.js"
+#     ↑ 模擬 AIBorn 排程：覆蓋 ENTRYPOINT，以 /bin/sh -c 執行指令
+#   docker compose down -v                            # 清掉容器與資料
+
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root-dev-only
+      MYSQL_DATABASE: cron_playground
+      MYSQL_USER: cron
+      MYSQL_PASSWORD: cron-dev-only
+    ports:
+      - "3307:3306" # 本機 npm run dev / job:* 連 127.0.0.1:3307
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot-dev-only"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - db-data:/var/lib/mysql
+
+  app:
+    build: .
+    image: cron-playground:local
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: "3306"
+      DATABASE_NAME: cron_playground
+      DATABASE_USER: cron
+      DATABASE_PASSWORD: cron-dev-only
+      DATABASE_SSL: "true" # MySQL 8.4 映像會自動產生自簽憑證，與 AIBorn 一樣走 SSL 不驗證
+      PLAYGROUND_MARKER: local-v1
+    ports:
+      - "8080:8080"
+
+volumes:
+  db-data:

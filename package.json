@@ -1,0 +1,36 @@
+{
+  "name": "cron-playground",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "db:migrate": "node --env-file-if-exists=.env src/scripts/migrate.js",
+    "job:heartbeat": "node --env-file-if-exists=.env src/scripts/heartbeat.js",
+    "job:fail": "node --env-file-if-exists=.env src/scripts/always-fail.js",
+    "job:slow": "node --env-file-if-exists=.env src/scripts/slow-task.js",
+    "pack:zip": "git archive --format=zip -o cron-playground.zip HEAD"
+  },
+  "dependencies": {
+    "mysql2": "^3.24.6",
+    "next": "16.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "4.3.3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5"
+  },
+  "description": "AIBorn 排程工作測試專案：Next.js 網站 + node src/scripts/*.js 排程腳本",
+  "engines": {
+    "node": ">=22.9"
+  }
+}
