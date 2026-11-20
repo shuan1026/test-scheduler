@@ -1,45 +1,15 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import type { RunRow } from "@/lib/runs";
 import { formatDuration, formatTaipei } from "@/lib/format";
 import { StatusBadge } from "./StatusBadge";
 
-const POLL_MS = 15_000;
-
-/** 最近執行紀錄。每 15 秒輪詢 /api/runs，排程跑完不用手動重新整理。 */
-export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
-  const [runs, setRuns] = useState(initialRuns);
-  const [error, setError] = useState<string | null>(null);
-  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const timer = setInterval(async () => {
-      try {
-        const res = await fetch("/api/runs", { cache: "no-store" });
-        const body = await res.json();
-        if (cancelled) return;
-        if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
-        setRuns(body.runs);
-        setError(null);
-        setUpdatedAt(new Date().toISOString());
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }, POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, []);
-
+/**
+ * 最近執行紀錄。資料由 Server Component 查好傳進來；
+ * 頁面上的 <AutoRefresh /> 每 15 秒 router.refresh()，這張表和 Job 卡片會一起更新。
+ */
+export function RunsTable({ runs, queriedAt }: { runs: RunRow[]; queriedAt: string }) {
   return (
     <div className="space-y-2">
-      <p className="text-xs text-zinc-500">
-        每 15 秒自動更新{updatedAt ? `・最後更新 ${formatTaipei(updatedAt)}` : ""}
-        {error ? <span className="ml-2 text-red-600">更新失敗：{error}</span> : null}
-      </p>
+      <p className="text-xs text-zinc-500">每 15 秒自動更新・資料時間 {formatTaipei(queriedAt)}</p>
       {runs.length === 0 ? (
         <p className="rounded-lg border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700">
           還沒有任何執行紀錄。到 AIBorn「排程工作」按「立即執行」，或在本機執行 <code>npm run job:heartbeat</code>。

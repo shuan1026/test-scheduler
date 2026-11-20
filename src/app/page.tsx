@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { AutoRefresh } from "@/components/AutoRefresh";
 import { DbError } from "@/components/DbError";
 import { RunsTable } from "@/components/RunsTable";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -9,6 +10,8 @@ import { listJobSummaries, listRecentRuns, type JobSummary, type RunRow } from "
 export default function DashboardPage() {
   return (
     <div className="space-y-10">
+      {/* Job 卡片與執行紀錄都是 Server Component，靠定時 refresh 更新；不然開著的頁面會一直停在載入當下的資料 */}
+      <AutoRefresh />
       <section>
         <h1 className="text-2xl font-semibold tracking-tight">排程儀表板</h1>
         <p className="mt-2 max-w-3xl text-sm text-zinc-600 dark:text-zinc-400">
@@ -95,5 +98,5 @@ async function RecentRuns() {
   } catch (error) {
     return <DbError error={error} />;
   }
-  return <RunsTable initialRuns={runs} />;
+  return <RunsTable runs={runs} queriedAt={new Date().toISOString()} />;
 }
